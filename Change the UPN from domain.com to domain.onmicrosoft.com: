@@ -1,0 +1,1 @@
+Get-MSoluser -All |? {$_.UserPrincipalName -like "*domain.com*" -and $_.UserPrincipalName -notlike "*globaladmin*"} |ForEach { Set-MsolUserPrincipalName -ObjectId $_.ObjectId -NewUserPrincipalName ($_.UserPrincipalName.Split(“@”)[0] + “@domain.onmicrosoft.com")}
