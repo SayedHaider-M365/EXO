@@ -1,0 +1,1 @@
+Get-Mailbox –ResultSize Unlimited | Where {$_.GrantSendOnBehalfTo -ne $null} | Select UserprincipalName,GrantSendOnBehalfTo
