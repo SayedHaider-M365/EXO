@@ -1,0 +1,7 @@
+#Connect to AD Powershell
+$users = Get-Content -path "C:\Users\SamAccountName_Input.csv"
+$results = @()
+Foreach ($user in $users)
+{
+Get-ADUser -Filter "UserPrincipalName -eq '$($user.UPN)'" -Properties name, samaccountname | select name, samaccountname
+}
