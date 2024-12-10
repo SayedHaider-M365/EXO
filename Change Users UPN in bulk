@@ -1,0 +1,6 @@
+#Change cloud user's UPN in bulk
+$Datas = Import-Csv "C:\Users\Shared Mailbox UPN List.csv"
+foreach ($Data in $Datas) 
+{
+Set-MsolUserPrincipalName -UserPrincipalName $Data.UserPrincipalName -NewUserPrincipalName $Data.NewUserPrincipalName
+}
