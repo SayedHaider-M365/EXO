@@ -1,0 +1,10 @@
+$Groups = Get-DistributionGroup
+$Groups | ForEach-Object {
+$group = $_.Name
+Get-DistributionGroupMember $group | ForEach-Object {
+New-Object -TypeName PSObject -Property @{
+Group = $group
+Member = $_.Name
+EmailAddress = $_.PrimarySMTPAddress
+RecipientType= $_.RecipientType
+}}} | Export-Csv "C:\Users\DistributionGroupMembers.csv" -NoTypeInformation 
