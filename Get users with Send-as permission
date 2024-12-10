@@ -1,0 +1,2 @@
+Get-Mailbox | foreach {
+(Get-RecipientPermission -Identity $_.userprincipalname | where{ -not (($_.Trustee -match "NT AUTHORITY") -or ($_.Trustee -match "S-1-5-21"))}) | select Identity,trustee}
