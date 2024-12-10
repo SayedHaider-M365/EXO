@@ -1,0 +1,1 @@
+Get-mailbox -ResultSize Unlimited| where {$_.ForwardingAddress -ne $Null} | select DisplayName,ForwardingAddress
