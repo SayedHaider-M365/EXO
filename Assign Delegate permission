@@ -26,7 +26,8 @@ foreach ($entry in $mailboxPermissions) {
     try {
         Add-MailboxPermission -Identity $Mailbox -User $User -AccessRights FullAccess -InheritanceType All -ErrorAction Stop
         Write-Host "Successfully granted Full Access to $User on $Mailbox." -ForegroundColor Green
-    } catch {
+    } 
+catch {
         Write-Host "Failed to grant Full Access to $User on $Mailbox. Error: $_" -ForegroundColor Red
     }
 }
