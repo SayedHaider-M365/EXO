@@ -1,0 +1,32 @@
+#Connect to EXO Powershell
+$csvFilePath = "C:\Users\MailboxDelegation.csv"
+ 
+$mailboxPermissions = Import-Csv -Path $csvFilePath
+ 
+# Iterate through each entry in the CSV and add Full Access permission
+foreach ($entry in $mailboxPermissions) {
+    $Mailbox = $entry.Mailbox
+    $User = $entry.User
+ 
+    # Check if the mailbox exists in Exchange Online
+    $mailboxExists = Get-Mailbox -Identity $Mailbox -ErrorAction SilentlyContinue
+    if (-not $mailboxExists) {
+        Write-Host "Mailbox $Mailbox does not exist in Exchange Online. Skipping..." -ForegroundColor Red
+        continue
+    }
+ 
+    # Check if the user already has Full Access permission
+    $existingPermission = Get-MailboxPermission -Identity $Mailbox | Where-Object { $_.User -like $User -and $_.AccessRights -contains "FullAccess" }
+    if ($existingPermission) {
+        Write-Host "$User already has Full Access permission on $Mailbox. Skipping..." -ForegroundColor Yellow
+        continue
+    }
+ 
+    Write-Host "Granting Full Access permission on $Mailbox to $User..." -ForegroundColor Yellow
+    try {
+        Add-MailboxPermission -Identity $Mailbox -User $User -AccessRights FullAccess -InheritanceType All -ErrorAction Stop
+        Write-Host "Successfully granted Full Access to $User on $Mailbox." -ForegroundColor Green
+    } catch {
+        Write-Host "Failed to grant Full Access to $User on $Mailbox. Error: $_" -ForegroundColor Red
+    }
+}
