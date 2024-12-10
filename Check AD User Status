@@ -1,0 +1,44 @@
+# Path to the CSV file containing the list of users
+$csvFilePath = "C:\Users\Documents\AD-User-Status.csv"
+ 
+# Path to the log file for disabled users
+$logFilePath = "C:\Users\Documents\DisabledUsersLog.csv"
+ 
+$users = Import-Csv -Path $csvFilePath
+ 
+# Initialize an array to store disabled users
+$disabledUsers = @()
+ 
+# Iterate through each entry in the CSV and check if the user is disabled
+foreach ($entry in $users) {
+    $Mail = $entry.Mail
+ 
+    # Find the user in Active Directory based on the 'mail' attribute
+    $user = Get-ADUser -Filter {Mail -eq $Mail} -Properties Enabled -ErrorAction SilentlyContinue
+    if ($user) {
+        if (-not $user.Enabled) {
+            Write-Host "User with mail $Mail is disabled in Active Directory." -ForegroundColor Red
+ 
+            # Add to disabled users log
+            $disabledUsers += [PSCustomObject]@{
+                Mail = $Mail
+                Enabled = $user.Enabled
+                Timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+            }
+        } else {
+            Write-Host "User with mail $Mail is enabled in Active Directory." -ForegroundColor Green
+        }
+    } else {
+        Write-Host "User with mail $Mail not found in Active Directory." -ForegroundColor Yellow
+    }
+}
+ 
+# Export disabled users to a log file if any are found
+if ($disabledUsers.Count -gt 0) {
+    Write-Host "Exporting disabled users to log file: $logFilePath" -ForegroundColor Yellow
+    $disabledUsers | Export-Csv -Path $logFilePath -NoTypeInformation -Force
+} else {
+    Write-Host "No disabled users found." -ForegroundColor Green
+}
+ 
+Write-Host "Script execution completed." -ForegroundColor Cyan
