@@ -1,0 +1,2 @@
+Get-Mailbox | foreach {
+(Get-MailboxPermission -Identity $_.userprincipalname | where{ ($_.AccessRights -contains "FullAccess") -and ($_.IsInherited -eq $false) -and -not ($_.User -match "NT AUTHORITY") }) | select Identity,AccessRights,User}
