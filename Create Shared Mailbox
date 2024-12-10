@@ -1,0 +1,53 @@
+# Path to the CSV file containing the list of email addresses
+$csvFilePath = "C:\Users\Sharedtobecreated_Latest.csv"
+ 
+# Path to the log file for created mailboxes
+$logFilePath = "C:\Users\CreatedMailboxesLog.csv"
+ 
+$emailAddresses = Import-Csv -Path $csvFilePath
+ 
+# Initialize an array to store created mailboxes
+$createdMailboxes = @()
+ 
+# Iterate through each email address in the CSV
+foreach ($entry in $emailAddresses) {
+    $EmailAddress = $entry.EmailAddress
+ 
+    # Check if the mailbox exists in Exchange Online
+    $mailboxExists = Get-Mailbox -Identity $EmailAddress -ErrorAction SilentlyContinue
+    $groupExists = Get-DistributionGroup -Identity $EmailAddress -ErrorAction SilentlyContinue
+    $m365GroupExists = Get-UnifiedGroup -Identity $EmailAddress -ErrorAction SilentlyContinue
+ 
+    if ($mailboxExists) {
+        Write-Host "Mailbox $EmailAddress already exists in Exchange Online." -ForegroundColor Green
+    } elseif ($groupExists) {
+        Write-Host "Distribution Group $EmailAddress already exists in Exchange Online." -ForegroundColor Yellow
+    } elseif ($m365GroupExists) {
+        Write-Host "M365 Group $EmailAddress already exists in Exchange Online." -ForegroundColor Yellow
+    } else {
+        Write-Host "No mailbox, distribution group, or M365 group found for $EmailAddress. Creating as a shared mailbox..." -ForegroundColor Yellow
+ 
+        try {
+            # Create a shared mailbox
+            New-Mailbox -Shared -Name $EmailAddress -PrimarySmtpAddress $EmailAddress -ErrorAction Stop
+ 
+            # Add to created mailboxes log
+            $createdMailboxes += [PSCustomObject]@{
+                EmailAddress = $EmailAddress
+                Timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+            }
+ 
+            Write-Host "Successfully created shared mailbox: $EmailAddress." -ForegroundColor Green
+        } catch {
+            Write-Host "Failed to create shared mailbox for $EmailAddress. Error: $_" -ForegroundColor Red
+        }
+    }
+}
+ 
+# Export created mailboxes to a log file if any are found
+if ($createdMailboxes.Count -gt 0) {
+    Write-Host "Exporting created mailboxes to log file: $logFilePath" -ForegroundColor Yellow
+    $createdMailboxes | Export-Csv -Path $logFilePath -NoTypeInformation -Force
+} else {
+    Write-Host "No shared mailboxes were created." -ForegroundColor Green
+}
