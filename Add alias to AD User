@@ -1,0 +1,27 @@
+# Path to the CSV file containing user details
+$InputCsvPath = "C:\Users\ADUsers.csv" # Update with your actual file path
+# Import the CSV file
+$Users = Import-Csv -Path $InputCsvPath
+# Loop through each user in the CSV
+foreach ($User in $Users) {
+    $Mail = $User.Mail
+    $SecondaryProxy = "smtp:" + $User.SecondaryProxy.Trim()
+    # Get the user from Active Directory
+    $ADUser = Get-ADUser -Filter { Mail -eq $Mail } -Properties ProxyAddresses
+    # Check if the user was found
+    if ($ADUser) {
+        # Initialize the ProxyAddresses array if it's null
+        $ProxyAddresses = $ADUser.ProxyAddresses
+        if (-not $ProxyAddresses) {
+            $ProxyAddresses = @()
+        }
+        # Check if the secondary proxy address already exists
+        if ($ProxyAddresses -notcontains $SecondaryProxy) {
+            # Add the new proxy address
+            $ProxyAddresses += $SecondaryProxy
+            # Update the AD user's ProxyAddresses property
+            Set-ADUser -Identity $ADUser.DistinguishedName -Replace @{ ProxyAddresses = $ProxyAddresses }
+        }
+    }
+}
+Write-Output "Process completed."
